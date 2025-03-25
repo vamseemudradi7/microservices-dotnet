@@ -1,0 +1,56 @@
+<!--
+    - Policies are applied in the order they appear.
+    - Position <base/> inside a section to inherit policies from the outer scope.
+    - Comments within policies are not preserved.
+-->
+<!-- Add policies as children to the <inbound>, <outbound>, <backend>, and <on-error> elements -->
+<policies>
+    <!-- Throttle, authorize, validate, cache, or transform the requests -->
+    <inbound>
+        <base />
+        <cors allow-credentials="true">
+            <allowed-origins>
+                <origin>https://localhost:4200</origin>
+            </allowed-origins>
+            <allowed-methods>
+                <method>GET</method>
+                <method>PUT</method>
+                <method>DELETE</method>
+                <method>POST</method>
+                <method>OPTIONS</method>
+            </allowed-methods>
+            <allowed-headers>
+                <header>Content-Type</header>
+                <header>Authorization</header>
+                <header>Accept</header>
+                <header>x-requested-with</header>
+            </allowed-headers>
+            <expose-headers>
+                <header>Content-Length</header>
+                <header>Authorization</header>
+                <header>Content-Type</header>
+            </expose-headers>
+        </cors>
+        <validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized" require-expiration-time="true" require-scheme="Bearer" require-signed-tokens="true">
+            <openid-config url="https://harshawebuniversity.b2clogin.com/harshawebuniversity.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=B2C_1_SignUp_SignIn" />
+            <audiences>
+                <audience>05f9093d-a8df-4170-86ec-4199d3d8d273</audience>
+            </audiences>
+            <issuers>
+                <issuer>https://harshawebuniversity.b2clogin.com/ebaf553a-3129-4d3e-9b74-a030641a13ed/v2.0/</issuer>
+            </issuers>
+        </validate-jwt>
+    </inbound>
+    <!-- Control if and how the requests are forwarded to services  -->
+    <backend>
+        <base />
+    </backend>
+    <!-- Customize the responses -->
+    <outbound>
+        <base />
+    </outbound>
+    <!-- Handle exceptions and customize error responses  -->
+    <on-error>
+        <base />
+    </on-error>
+</policies>

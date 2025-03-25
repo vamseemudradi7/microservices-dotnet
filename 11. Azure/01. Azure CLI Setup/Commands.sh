@@ -1,0 +1,2 @@
+az --version
+az login

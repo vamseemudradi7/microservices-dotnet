@@ -1,0 +1,80 @@
+trigger:
+- dev
+
+resources:
+- repo: self
+
+variables:
+  - name: dockerRegistryServiceConnection
+    value: '525b95a9-e717-4679-b26e-222b52619223'
+  - name: imageRepository
+    value: 'products-microservice'
+  - name: containerRegistry
+    value: 'harshaecommerceregistry.azurecr.io'
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/ProductsMicroService.API/Dockerfile'
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: vmImageName 
+    value: 'ubuntu-latest'
+  - name: windowsImageName
+    value: 'windows-latest'
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Docker Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+        buildContext: $(Build.SourcesDirectory)
+
+- stage: Test
+  displayName: Test and publish results stage
+  jobs:
+  - job: RunTest
+    displayName: Run Unit tests
+    pool:
+      vmImage: $(windowsImageName)
+    steps:
+    - checkout: self
+      displayName: Checkout source code
+
+    - task: NuGetToolInstaller@1
+      displayName: Install NuGetTool
+
+    - task: NuGetCommand@2
+      displayName: Restore NuGet Packages
+      inputs:
+        command: 'restore'
+        restoreSolution: '**/*.sln'
+        
+    - task: MSBuild@1
+      displayName: Build solution
+      inputs:
+        solution: '**/*.sln'
+        msbuildArchitecture: 'x64'
+        platform: 'Any CPU'
+        configuration: 'Release'
+        msbuildArguments: '/p:Configuration=Release'
+    
+    - task: VSTest@3
+      displayName: Test solution
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: |
+          **\ProductsUnitTests.dll
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        runTestsInIsolation: true
+        codeCoverageEnabled: true
